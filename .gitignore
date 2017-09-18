@@ -1,0 +1,6 @@
+*.c
+*.tab.hpp
+*.o
+*.tab.cpp 
+interactive_deduction.output
+interactive_deduction
