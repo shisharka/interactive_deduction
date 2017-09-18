@@ -2,14 +2,14 @@
 
 /* Natural deduction rules:
 0.                                         ------> G, A |- A         (ass)
-1.  G, A |- F                              ------>    G | -~A        (notI)
+1.  G, A |- F                              ------>    G |- ~A        (notI)
 2.     G |- A; G |- ~A                     ------>    G |- F         (notE)
-3.     G |- A; G |- B                      ------>    G |- A /\ B    (andI)
-4.     G |- A /\ B                         ------>    G |- A         (andE1)
-5.     G |- A /\ B                         ------>    G |- B         (andE2)
-6.     G |- A                              ------>    G |- A \/ B    (orI1)
-7.     G |- B                              ------>    G |- A \/ B    (orI2)
-8.     G |- A \/ B; G, A |- C;  G, B |- C  ------>    G |- C         (orE)
+3.     G |- A; G |- B                      ------>    G |- A /\ B    (conjI)
+4.     G |- A /\ B                         ------>    G |- A         (conjE1)
+5.     G |- A /\ B                         ------>    G |- B         (conjE2)
+6.     G |- A                              ------>    G |- A \/ B    (disjI1)
+7.     G |- B                              ------>    G |- A \/ B    (disjI2)
+8.     G |- A \/ B; G, A |- C;  G, B |- C  ------>    G |- C         (disjE)
 9.  G, A |- B                              ------>    G |- A => B    (impI)
 10.    G |- A; G |- A => B                 ------>    G |- B         (impE)
 11.    G |- F                              ------>    G |- A         (FalseE)
@@ -19,23 +19,25 @@
 15.    G |- ~A                             ------>    G |- A         (Contradiction)
 */
 
-bool applyAssumption(const set<Formula> & assumptions, const Formula & f) {
-  set<Formula>::const_iterator it = assumptions.find(f);
-  
-  if(it != assumptions.end())
-    return true;
+bool applyAssumption(vector<Formula> & assumptions, const Formula & f) {
+  for(Formula a : assumptions)
+    if(f->equalTo(a))
+      return true;
 
   cerr << "Failed to apply assumption" << endl;
   return false;
 }
 
-Formula applyNotI(set<Formula> & assumptions, const Formula & f) {
+Formula applyNotI(vector<Formula> & assumptions, const Formula & f) {
   if(f->getType() == T_NOT) {
     Formula notOp = ((Not *)f.get())->getOperand();
 
-    set<Formula>::const_iterator it = assumptions.find(notOp);
-    if(it == assumptions.end())
-      assumptions.insert(notOp);
+    bool shouldAdd = true; // indicator for whether or not notOp should be added to assumptions
+    for(unsigned i = 0; i < assumptions.size(); i++)
+      if(notOp->equalTo(assumptions[i]))
+        shouldAdd = false;
+    if(shouldAdd)
+      assumptions.push_back(notOp);
 
     return make_shared<False>();
   };
@@ -44,79 +46,82 @@ Formula applyNotI(set<Formula> & assumptions, const Formula & f) {
   return f;
 }
 
-set<Formula> applyNotE(const Formula & a, const Formula & f) {
-  set<Formula> result = set<Formula>();
+vector<Formula> applyNotE(const Formula & a, const Formula & f) {
+  vector<Formula> result = vector<Formula>();
 
   if(f->getType() == T_FALSE) {
-    result.insert(a);
+    result.push_back(a);
     // if(a->getType() == T_NOT)
-    //   result.insert(((Not *)a.get())->getOperand());
+    //   result.push_back(((Not *)a.get())->getOperand());
     // else
-      result.insert(make_shared<Not>(a));
+      result.push_back(make_shared<Not>(a));
 
     return result;
   };
 
   cerr << "Failed to apply notE" << endl;
-  result.insert(f);
+  result.push_back(f);
   return result;
 }
 
-set<Formula> applyAndI(const Formula & f) {
-  set<Formula> result = set<Formula>();
+vector<Formula> applyConjI(const Formula & f) {
+  vector<Formula> result = vector<Formula>();
 
   if(f->getType() == T_AND) {
-    result.insert(((And *)f.get())->getOperand1());
-    result.insert(((And *)f.get())->getOperand2());
+    result.push_back(((And *)f.get())->getOperand1());
+    result.push_back(((And *)f.get())->getOperand2());
 
     return result;
   };
 
-  cerr << "Failed to apply andI" << endl;
-  result.insert(f);
+  cerr << "Failed to apply conjI" << endl;
+  result.push_back(f);
   return result;
 }
 
-Formula applyAndE1(const Formula & a, const Formula & b) {
+Formula applyConjE1(const Formula & a, const Formula & b) {
   return make_shared<And>(a, b);
 }
 
-Formula applyAndE2(const Formula & a, const Formula & b) {
+Formula applyConjE2(const Formula & a, const Formula & b) {
   return make_shared<And>(b, a);
 }
 
-Formula applyOrI1(const Formula & f) {
+Formula applyDisjI1(const Formula & f) {
   if(f->getType() == T_OR)
     return (((Or *)f.get())->getOperand1());
 
-  cerr << "Failed to apply orI1" << endl;
+  cerr << "Failed to apply disjI1" << endl;
   return f;
 }
 
-Formula applyOrI2(const Formula & f) {
+Formula applyDisjI2(const Formula & f) {
   if(f->getType() == T_OR)
     return (((Or *)f.get())->getOperand2());
 
-  cerr << "Failed to apply orI2" << endl;
+  cerr << "Failed to apply disjI2" << endl;
   return f;
 }
 
-set<Formula> applyOrE(const Formula & c, const Formula & a, const Formula & b) {
-  set<Formula> result = set<Formula>();
-  result.insert(Formula(new Or(a, b)));
-  result.insert(c);
+vector<Formula> applyDisjE(const Formula & c, const Formula & a, const Formula & b) {
+  vector<Formula> result = vector<Formula>();
+  result.push_back(Formula(new Or(a, b)));
+  result.push_back(c);
 
   return result;
 }
 
-Formula applyImpI1(set<Formula> & assumptions, const Formula & f) {
+Formula applyImpI(vector<Formula> & assumptions, const Formula & f) {
   if(f->getType() == T_IMP) {
     Formula a = (((Imp *)f.get())->getOperand1());
     Formula b = (((Imp *)f.get())->getOperand2());
 
-    set<Formula>::const_iterator it = assumptions.find(a);
-    if(it == assumptions.end())
-      assumptions.insert(a);
+    bool shouldAdd = true; // indicator for whether or not a should be added to assumptions
+    for(unsigned i = 0; i < assumptions.size(); i++)
+      if(a->equalTo(assumptions[i]))
+        shouldAdd = false;
+    if(shouldAdd)
+      assumptions.push_back(a);
 
     return b;
   };
@@ -125,11 +130,11 @@ Formula applyImpI1(set<Formula> & assumptions, const Formula & f) {
   return f;
 }
 
-set<Formula> applyImpE(const Formula & a, const Formula & b) {
-  set<Formula> result = set<Formula>();
+vector<Formula> applyImpE(const Formula & a, const Formula & b) {
+  vector<Formula> result = vector<Formula>();
 
-  result.insert(a);
-  result.insert(make_shared<Imp>(a, b));
+  result.push_back(a);
+  result.push_back(make_shared<Imp>(a, b));
   return result;
 }
 
@@ -160,12 +165,15 @@ Formula applyDoubleNegation(const Formula & f) {
   return make_shared<Not>(make_shared<Not>(f));
 }
 
-Formula applyContradiction(set<Formula> & assumptions, const Formula & f) {
+Formula applyContradiction(vector<Formula> & assumptions, const Formula & f) {
   Formula fNot = make_shared<Not>(f);
   
-  set<Formula>::const_iterator it = assumptions.find(fNot);
-  if(it == assumptions.end())
-    assumptions.insert(fNot);
+  bool shouldAdd = true; // indicator for whether or not fNot should be added to assumptions
+  for(unsigned i = 0; i < assumptions.size(); i++)
+    if(fNot->equalTo(assumptions[i]))
+      shouldAdd = false;
+  if(shouldAdd)
+    assumptions.push_back(fNot);
 
   return make_shared<False>();
 

@@ -3,15 +3,15 @@
 
 #include <iostream>
 #include <string>
-#include <sstream>
-#include <map>
-#include <vector>
-#include <set>
+// #include <sstream>
+// #include <map>
+// #include <vector>
+// #include <set>
 #include <memory>
-#include <algorithm>
-#include <functional>
-#include <stdio.h>
-#include <stdlib.h>
+// #include <algorithm>
+// #include <functional>
+// #include <stdio.h>
+// #include <stdlib.h>
 
 using namespace std;
 
@@ -29,7 +29,7 @@ public:
   virtual FormulaType getType() const = 0; // get formula type
   virtual void printFormula(ostream & ostr) const = 0; // print formula to an output stream 
   virtual bool equalTo(const Formula & f) const = 0; // check syntax equality of two formulas
-  virtual Formula rewrite(); // rewriting for equivalence
+  virtual Formula simplify(); // simplifying for equivalence
   virtual ~BaseFormula() {}
 };
 
@@ -127,8 +127,8 @@ public:
   using BinaryConnective::BinaryConnective;
   virtual FormulaType getType() const;
   virtual void printFormula(ostream & ostr) const;
-  // rewriting A <=> B as (A => B) /\ (B => A)
-  virtual Formula rewrite();
+  // (A => B) /\ (B => A) instead of A <=> B
+  virtual Formula simplify();
 };
 
 #endif

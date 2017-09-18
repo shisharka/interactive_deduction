@@ -1,3 +1,12 @@
+#include <sstream>
+// #include <map>
+// #include <vector>
+// #include <set>
+// #include <memory>
+// #include <algorithm>
+// #include <functional>
+// #include <stdio.h>
+// #include <stdlib.h>
 #include "formula.hpp"
 
 // Function for printing formula to an output stream
@@ -94,7 +103,7 @@ void Or::printFormula(ostream & ostr) const {
 }
 
 void Imp::printFormula(ostream & ostr) const {
-  ostr << "(" << _op1 << " ==> " << _op2 << ")";
+  ostr << "(" << _op1 << " => " << _op2 << ")";
 }
 
 void Iff::printFormula(ostream & ostr) const {
@@ -136,12 +145,12 @@ bool BinaryConnective::equalTo(const Formula & f) const {
 }
 // ----------------------------------------------------------------
 
-// --------------------------- rewrite ----------------------------
-Formula BaseFormula::rewrite() {
+// -------------------------- simplify ----------------------------
+Formula BaseFormula::simplify() {
   return shared_from_this();
 }
 
-Formula Iff::rewrite() {
+Formula Iff::simplify() {
   return make_shared<And>(make_shared<Imp>(_op1, _op2),
                           make_shared<Imp>(_op2, _op1));
 }

@@ -23,7 +23,7 @@ False                       { return false_token; }
 "~"                         { return not_token; }
 "/\\"                       { return and_token; }
 "\\/"                       { return or_token; }
-"==>"                       { return imp_token; }
+"=>"                       { return imp_token; }
 "<=>"                       { return iff_token; }
 [()\n]                      { return *yytext; }
 [ \t]                       { }
