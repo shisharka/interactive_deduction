@@ -1,0 +1,308 @@
+Grammar
+
+    0 $accept: Program $end
+
+    1 Program: Formula '\n' Program
+    2        | %empty
+
+    3 Formula: E
+
+    4 E: E and_token E
+    5  | E or_token E
+    6  | E imp_token E
+    7  | E iff_token E
+    8  | not_token E
+    9  | '(' E ')'
+   10  | atom_token
+   11  | true_token
+   12  | false_token
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'\n' (10) 1
+'(' (40) 9
+')' (41) 9
+error (256)
+atom_token (258) 10
+not_token (259) 8
+true_token (260) 11
+false_token (261) 12
+or_token (262) 5
+and_token (263) 4
+imp_token (264) 6
+iff_token (265) 7
+NOT (266)
+
+
+Nonterminals, with rules where they appear
+
+$accept (15)
+    on left: 0
+Program (16)
+    on left: 1 2, on right: 0 1
+Formula (17)
+    on left: 3, on right: 1
+E (18)
+    on left: 4 5 6 7 8 9 10 11 12, on right: 3 4 5 6 7 8 9
+
+
+State 0
+
+    0 $accept: . Program $end
+
+    atom_token   shift, and go to state 1
+    not_token    shift, and go to state 2
+    true_token   shift, and go to state 3
+    false_token  shift, and go to state 4
+    '('          shift, and go to state 5
+
+    $default  reduce using rule 2 (Program)
+
+    Program  go to state 6
+    Formula  go to state 7
+    E        go to state 8
+
+
+State 1
+
+   10 E: atom_token .
+
+    $default  reduce using rule 10 (E)
+
+
+State 2
+
+    8 E: not_token . E
+
+    atom_token   shift, and go to state 1
+    not_token    shift, and go to state 2
+    true_token   shift, and go to state 3
+    false_token  shift, and go to state 4
+    '('          shift, and go to state 5
+
+    E  go to state 9
+
+
+State 3
+
+   11 E: true_token .
+
+    $default  reduce using rule 11 (E)
+
+
+State 4
+
+   12 E: false_token .
+
+    $default  reduce using rule 12 (E)
+
+
+State 5
+
+    9 E: '(' . E ')'
+
+    atom_token   shift, and go to state 1
+    not_token    shift, and go to state 2
+    true_token   shift, and go to state 3
+    false_token  shift, and go to state 4
+    '('          shift, and go to state 5
+
+    E  go to state 10
+
+
+State 6
+
+    0 $accept: Program . $end
+
+    $end  shift, and go to state 11
+
+
+State 7
+
+    1 Program: Formula . '\n' Program
+
+    '\n'  shift, and go to state 12
+
+
+State 8
+
+    3 Formula: E .
+    4 E: E . and_token E
+    5  | E . or_token E
+    6  | E . imp_token E
+    7  | E . iff_token E
+
+    or_token   shift, and go to state 13
+    and_token  shift, and go to state 14
+    imp_token  shift, and go to state 15
+    iff_token  shift, and go to state 16
+
+    $default  reduce using rule 3 (Formula)
+
+
+State 9
+
+    4 E: E . and_token E
+    5  | E . or_token E
+    6  | E . imp_token E
+    7  | E . iff_token E
+    8  | not_token E .
+
+    $default  reduce using rule 8 (E)
+
+
+State 10
+
+    4 E: E . and_token E
+    5  | E . or_token E
+    6  | E . imp_token E
+    7  | E . iff_token E
+    9  | '(' E . ')'
+
+    or_token   shift, and go to state 13
+    and_token  shift, and go to state 14
+    imp_token  shift, and go to state 15
+    iff_token  shift, and go to state 16
+    ')'        shift, and go to state 17
+
+
+State 11
+
+    0 $accept: Program $end .
+
+    $default  accept
+
+
+State 12
+
+    1 Program: Formula '\n' . Program
+
+    atom_token   shift, and go to state 1
+    not_token    shift, and go to state 2
+    true_token   shift, and go to state 3
+    false_token  shift, and go to state 4
+    '('          shift, and go to state 5
+
+    $default  reduce using rule 2 (Program)
+
+    Program  go to state 18
+    Formula  go to state 7
+    E        go to state 8
+
+
+State 13
+
+    5 E: E or_token . E
+
+    atom_token   shift, and go to state 1
+    not_token    shift, and go to state 2
+    true_token   shift, and go to state 3
+    false_token  shift, and go to state 4
+    '('          shift, and go to state 5
+
+    E  go to state 19
+
+
+State 14
+
+    4 E: E and_token . E
+
+    atom_token   shift, and go to state 1
+    not_token    shift, and go to state 2
+    true_token   shift, and go to state 3
+    false_token  shift, and go to state 4
+    '('          shift, and go to state 5
+
+    E  go to state 20
+
+
+State 15
+
+    6 E: E imp_token . E
+
+    atom_token   shift, and go to state 1
+    not_token    shift, and go to state 2
+    true_token   shift, and go to state 3
+    false_token  shift, and go to state 4
+    '('          shift, and go to state 5
+
+    E  go to state 21
+
+
+State 16
+
+    7 E: E iff_token . E
+
+    atom_token   shift, and go to state 1
+    not_token    shift, and go to state 2
+    true_token   shift, and go to state 3
+    false_token  shift, and go to state 4
+    '('          shift, and go to state 5
+
+    E  go to state 22
+
+
+State 17
+
+    9 E: '(' E ')' .
+
+    $default  reduce using rule 9 (E)
+
+
+State 18
+
+    1 Program: Formula '\n' Program .
+
+    $default  reduce using rule 1 (Program)
+
+
+State 19
+
+    4 E: E . and_token E
+    5  | E . or_token E
+    5  | E or_token E .
+    6  | E . imp_token E
+    7  | E . iff_token E
+
+    imp_token  shift, and go to state 15
+    iff_token  shift, and go to state 16
+
+    $default  reduce using rule 5 (E)
+
+
+State 20
+
+    4 E: E . and_token E
+    4  | E and_token E .
+    5  | E . or_token E
+    6  | E . imp_token E
+    7  | E . iff_token E
+
+    imp_token  shift, and go to state 15
+    iff_token  shift, and go to state 16
+
+    $default  reduce using rule 4 (E)
+
+
+State 21
+
+    4 E: E . and_token E
+    5  | E . or_token E
+    6  | E . imp_token E
+    6  | E imp_token E .
+    7  | E . iff_token E
+
+    $default  reduce using rule 6 (E)
+
+
+State 22
+
+    4 E: E . and_token E
+    5  | E . or_token E
+    6  | E . imp_token E
+    7  | E . iff_token E
+    7  | E iff_token E .
+
+    $default  reduce using rule 7 (E)

@@ -65,11 +65,225 @@ E : E and_token E         { $$ = new Formula(make_shared<And>(*$1, *$3)); }
 
 %%
 
+// Function for parsing formula
+Formula parseFormula() {
+  Formula f;
+  yyparse(f);
+
+  return f;
+}
+
+// Apply rule helper function
+// bool applyRule(vector < vector<Formula> > & leftSide, vector<Formula> & rightSide, int brf, Formula & A, int unetBr, Formula B = Formula(new True())) {
+//   Formula pom, rez;
+//   bool pVrednost;
+//   vector<Formula> vecrez, vecLeftSide;
+//   switch (unetBr) {
+//   case 0:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     pVrednost = applyAss(leftSide[brf - 1], pom);
+//     if (!pVrednost)
+//       rightSide.push_back(pom);
+//     else
+//       leftSide.pop_back();
+//     return pVrednost;
+
+//   case 1:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     rez = applyNotI(leftSide[brf - 1], pom);
+//     rightSide.push_back(rez);
+//     if (rez.get()->equalTo(pom))
+//       return false;
+//     else
+//       return true;
+//   case 2:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     vecLeftSide = leftSide[brf - 1];
+//     vecrez = applyNotE(A, pom);
+//     leftSide.pop_back();
+//     if (vecrez[0].get()->equalTo(pom)) {
+//       rightSide.push_back(vecrez[0]);
+//       leftSide.push_back(vecLeftSide);
+//       return false;
+//     }
+//     else {
+//       leftSide.push_back(vecLeftSide);
+//       leftSide.push_back(vecLeftSide);
+//       rightSide.push_back(vecrez[0]);
+//       rightSide.push_back(vecrez[1]);
+
+//       return true;
+//     }
+//   case 3:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     vecLeftSide = leftSide[brf - 1];
+//     vecrez = applyAndI(pom);
+//     leftSide.pop_back();
+//     if (vecrez[0].get()->equalTo(pom)) {
+//       rightSide.push_back(vecrez[0]);
+//       leftSide.push_back(vecLeftSide);
+//       return false;
+//     }
+//     else {
+//       for (int i = 0; i<vecrez.size(); i++) {
+//         rightSide.push_back(vecrez[i]);
+//         leftSide.push_back(vecLeftSide);
+//       }
+//       return true;
+//     }
+//   case 4:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     rez = applyAndE1(pom, A);
+//     if (rez.get()->equalTo(pom)) {
+//       rightSide.push_back(pom);
+//       return false;
+//     }
+//     else {
+//       rightSide.push_back(rez);
+//       return true;
+//     }
+//   case 5:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     rez = applyAndE2(pom, A);
+//     if (rez.get()->equalTo(pom)) {
+//       rightSide.push_back(pom);
+//       return false;
+//     }
+//     else {
+//       rightSide.push_back(rez);
+//       return true;
+//     }
+//   case 6:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     rez = applyOrI1(pom);
+//     if (rez.get()->equalTo(pom)) {
+//       rightSide.push_back(pom);
+//       return false;
+//     }
+//     else {
+//       rightSide.push_back(rez);
+//       return true;
+//     }
+//   case 7:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     rez = applyOrI2(pom);
+//     if (rez.get()->equalTo(pom)) {
+//       rightSide.push_back(pom);
+//       return false;
+//     }
+//     else {
+//       rightSide.push_back(rez);
+//       return true;
+//     }
+
+
+//   case 8:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     vecLeftSide = leftSide[brf - 1];
+//     vecrez = applyOrE(pom, A, B);
+//     leftSide.pop_back();
+//     rightSide.push_back(vecrez[0]);
+//     leftSide.push_back(vecLeftSide);
+//     rightSide.push_back(vecrez[1]);
+//     vecLeftSide.push_back(A);
+//     leftSide.push_back(vecLeftSide);
+//     rightSide.push_back(vecrez[1]);
+//     vecLeftSide.pop_back();
+//     vecLeftSide.push_back(B);
+//     leftSide.push_back(vecLeftSide);
+//     return true;
+
+//   case 9:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     rez = applyImpI1(leftSide[brf - 1], pom);
+//     if (rez.get()->equalTo(pom)) {
+//       rightSide.push_back(pom);
+//       return false;
+//     }
+//     else {
+//       rightSide.push_back(rez);
+//       return true;
+//     }
+//   case 10:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     vecLeftSide = leftSide[brf - 1];
+//     leftSide.pop_back();
+//     vecrez = applyImpE(A, pom);
+//     for (unsigned i = 0; i<vecrez.size(); i++) {
+//       rightSide.push_back(vecrez[i]);
+//       leftSide.push_back(vecLeftSide);
+//     }
+//     return true;
+//   case 11:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     rez = applyFalseE(pom);
+//     if (rez.get()->equalTo(pom)) {
+//       rightSide.push_back(pom);
+//       return false;
+//     }
+//     else {
+//       rightSide.push_back(rez);
+//       return true;
+//     }
+//   case 12:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     leftSide.pop_back();
+//     pVrednost = applyTrueI(pom);
+//     return pVrednost;
+//   case 13:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     pVrednost = applyExcludedMiddle(pom);
+//     if (pVrednost == false)
+//       rightSide.push_back(pom);
+//     else
+//       leftSide.pop_back();
+//     return pVrednost;
+//   case 14:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     rez = applyDoubleNegation(pom);
+//     rightSide.push_back(rez);
+//     if (rez.get()->equalTo(pom))
+//       return false;
+//     else {
+//       return true;
+//     }
+//   case 15:
+//     pom = rightSide[brf - 1];
+//     rightSide.pop_back();
+//     rez = applyContradiction(leftSide[brf - 1], pom);
+//     rightSide.push_back(rez);
+//     if (rez.get()->equalTo(pom))
+//       return false;
+//     else {
+//       return true;
+//     }
+//   default:
+//     cout << "Potrebno je uneti brojeve izmedju 0 i 15 da bi se primenilo pravilo!" << endl;
+//     return false;
+//   }
+// }
+
 int main () {
   // yydebug = 1;
   cout << "Enter formula:" << endl;
-  Formula formula;
-  string S = "Choose rule to apply:\n";
+  Formula f = parseFormula();
+  cout << f << endl;
+  string S = "Select rule to apply (-1 to exit):\n";
   S += "0. assumption\n";
   S += "1. notI\n";
   S += "2. notE\n";
@@ -86,7 +300,104 @@ int main () {
   S += "13. ExcludedMiddle\n";
   S += "14. DoubleNegation\n";
   S += "15. Contradiction\n";
-  yyparse(formula);
-  cout << formula << endl;
+
+  // vector <vector <Formula> > leftSiden = vector< vector<Formula> >();
+  // leftSiden.push_back(vector <Formula>());
+  // vector <Formula> rightSide = vector<Formula>();
+  // rightSide.push_back(f);
+  // bool cont = true;
+  // while (rightSide.size()>0 && cont == true) {
+  //   cout << "Subgoals:" << endl;
+  //   for (int j = rightSide.size() - 1; j >= 0; j--) {
+  //     cout << rightSide.size() - j << ". ";
+  //     for (int k = 0; k<leftSiden[j].size(); k++) {
+  //       cout << leftSiden[j][k]();
+  //       if (k != leftSiden[j].size() - 1)
+  //         cout << " , ";
+  //     }
+  //     cout << " |-- ";
+  //     cout << rightSide[j] << endl;
+  //   }
+  //   cout << "Rules:" << endl << S << endl;
+  //   cin >> i;
+  //   while (i<-1 || i>15) {
+  //     cout << "Wrong rule number" << endl;
+  //     cout << "Select rule to apply (-1 to exit):" << endl;
+  //     cin >> i;
+  //   }
+  //   if (i == -1)
+  //     cont = false;
+  //   // else if (i == 16) {
+  //   //   cout << "Unesite broj formule koju zelite da dokazujete:" << endl;
+  //   //   cin >> i;
+  //   //   while (i<1 || i>rightSide.size()) {
+  //   //     cout << "Uneli ste pogresan broj za formulu, pokusajte ponovo!" << endl;
+  //   //     cout << "Unesite broj formule koju zelite da dokazujete : " << endl;
+  //   //     cin >> i;
+  //   //   }
+  //   //   int k = rightSide.size();
+  //   //   Formula pomRight = rightSide[k - i];
+  //   //   vector <Formula> leftSidePom = leftSiden[k - i];
+  //   //   rightSide.push_back(pomRight);
+  //   //   leftSiden.push_back(leftSidePom);
+  //   //   rightSide.erase(rightSide.begin() + (k - i));
+  //   //   leftSiden.erase(leftSiden.begin() + (k - i));
+  //   // }
+  //   else if (i == 2 || i == 10 || i == 4 || i == 5) {
+  //     char c;
+  //     string zapisPFormule = "";
+  //     cout << "Enter additional formula:" << endl;
+  //     cin.get();
+  //     c = cin.get();
+  //     while (c != '\n') {
+  //       zapisPFormule += c;
+  //       c = cin.get();
+  //     }
+  //     Formula g;
+  //     yyparse(g);
+  //     // cout << g << endl;
+  //     bool result = applyRule(leftSiden, rightSide, rightSide.size(), f, i);
+  //     if (!result)
+  //       cout << "Nije primenjeno nijedno pravilo!" << endl;
+  //   }
+  //   else if (i == 8) {
+  //     char c;
+  //     string zapisPFormule1 = "";
+  //     string zapisPFormule2 = "";
+  //     cout << "Unesite pomocnu formulu A:" << endl;
+  //     cin.get();
+  //     c = cin.get();
+  //     while (c != '\n') {
+  //       zapisPFormule1 += c;
+  //       c = cin.get();
+  //     }
+  //     Formula f = readFormula(freeblanko(zapisPFormule1));
+  //     cout << "Unesite pomocnu formulu B:" << endl;
+  //     c = cin.get();
+  //     while (c != '\n') {
+  //       zapisPFormule2 += c;
+  //       c = cin.get();
+  //       cout << c;
+  //     }
+  //     cout << zapisPFormule2;
+  //     Formula g = readFormula(freeblanko(zapisPFormule2));
+  //     bool result = applyRule(leftSiden, rightSide, rightSide.size(), f, i, g);
+  //     if (!result)
+  //       cout << "Nije primenjeno nikakvo pravilo!" << endl;
+  //   }
+  //   else {
+  //     Formula g = make_shared<True>;
+  //     bool result = applyRule(leftSiden, rightSide, rightSide.size(), f, i);
+  //     if (!result)
+
+  //       cout << "Nije primenjeno nijedno pravilo!" << endl;
+  //   }
+
+  // }
+  // if (cont == false)
+  //   cout << "Exiting..." << endl;
+  // else
+  //   cout << "Formula " << f << " is a theorem" << endl;
+
   return 0;
 }
