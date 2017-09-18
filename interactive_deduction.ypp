@@ -1,0 +1,92 @@
+%{
+#include <iostream>
+#include <string>
+#include <cstdlib>
+#include <map>    
+#include <math.h>
+#include "naturaldeduction.hpp"
+
+#define YYDEBUG 1 // for debugging
+
+using namespace std;
+
+// Error handling
+void yyerror(Formula & formula, const string message) {
+  cerr << message << endl;
+  exit(EXIT_FAILURE);
+}
+
+// Lexical analyzer
+extern int yylex();
+  
+%}
+
+// Union for representing attribute type for tokens and expressions
+%union {
+  string * s;
+  Formula * f = new Formula();
+}
+
+// Defining tokens
+%token <s> atom_token
+%token not_token
+%token true_token
+%token false_token
+
+// Expression attribute
+%type <f> E
+
+// Operators priority and associativity
+%left or_token and_token
+%left imp_token iff_token
+%left NOT
+
+%parse-param { Formula & formula }
+
+%%
+Program: Formula '\n' Program
+| 
+;
+
+Formula: E                { formula = *$1; return 0; }
+;
+
+E : E and_token E         { $$ = new Formula(make_shared<And>(*$1, *$3)); } 
+| E or_token E            { $$ = new Formula(make_shared<Or>(*$1, *$3)); }
+| E imp_token E           { $$ = new Formula(make_shared<Imp>(*$1, *$3)); }
+// rewriting A <=> B to (A ==> B) /\ (B ==> A)
+| E iff_token E           { $$ = new Formula(make_shared<Iff>(*$1, *$3)->rewrite()); }
+| not_token E %prec NOT   { $$ = new Formula(make_shared<Not>(*$2)); }
+| '(' E ')'               { $$ = $2; }
+| atom_token              { $$ = new Formula(make_shared<Atom>(*$1)); }
+| true_token              { $$ = new Formula(make_shared<True>()); }
+| false_token             { $$ = new Formula(make_shared<False>()); }
+;
+
+%%
+
+int main () {
+  // yydebug = 1;
+  cout << "Enter formula:" << endl;
+  Formula formula;
+  string S = "Choose rule to apply:\n";
+  S += "0. assumption\n";
+  S += "1. notI\n";
+  S += "2. notE\n";
+  S += "3. andI\n";
+  S += "4. andE1\n";
+  S += "5. andE2\n";
+  S += "6. orI1\n";
+  S += "7. orI2\n";
+  S += "8. orE\n";
+  S += "9. impI\n";
+  S += "10. impE\n";
+  S += "11. falseE\n";
+  S += "12. trueI\n";
+  S += "13. ExcludedMiddle\n";
+  S += "14. DoubleNegation\n";
+  S += "15. Contradiction\n";
+  yyparse(formula);
+  cout << formula << endl;
+  return 0;
+}
