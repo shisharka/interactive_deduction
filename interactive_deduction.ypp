@@ -1,8 +1,6 @@
 %{
 #include <iostream>
 #include <string>
-// #include <cstdlib>
-// #include <map>    
 #include "naturaldeduction.hpp"
 
 #define YYDEBUG 1 // for debugging
@@ -35,7 +33,7 @@ extern int yylex();
 // Expression attribute
 %type <f> E
 
-// Operators priority and associativity
+// Operators precedence and associativity
 %left imp_token iff_token
 %left or_token and_token
 %left NOT
@@ -78,185 +76,12 @@ void clearInputBuffer() {
   cin.ignore();
 }
 
-// Apply rule helper function
-bool applyRule(vector<vector<Formula>> & assumptionsVec, vector<Formula> & goals, int inputNum, Formula & A, Formula B = make_shared<True>()) {
-  bool returnValue;
-  Formula result, goal = goals[goals.size() - 1];
-  vector<Formula> resultVec, assumptions;
-
-  goals.pop_back();
-
-  switch (inputNum) {
-  case 0: // assumption
-    assumptions = assumptionsVec[assumptionsVec.size() - 1];
-    assumptionsVec.pop_back();
-    returnValue = applyAssumption(assumptions, goal);
-    if(!returnValue) {
-      goals.push_back(goal);
-      assumptionsVec.push_back(assumptions);
-    };
-    return returnValue;
-
-  case 1: // notI
-    assumptions = assumptionsVec[assumptionsVec.size() - 1];
-    result = applyNotI(assumptions, goal);
-    goals.push_back(result);
-    return !result.get()->equalTo(goal);
-
-  case 2: // notE
-    assumptions = assumptionsVec[assumptionsVec.size() - 1];
-    resultVec = applyNotE(A, goal);
-    if(resultVec[0]->equalTo(goal)) {
-      goals.push_back(goal);
-      return false;
-    }
-    else {
-      assumptionsVec.push_back(assumptions);
-      goals.push_back(resultVec[0]);
-      goals.push_back(resultVec[1]);
-      return true;
-    };
-
-  case 3: // conjI
-    assumptions = assumptionsVec[assumptionsVec.size() - 1];
-    assumptionsVec.pop_back();
-    resultVec = applyConjI(goal);
-    if(resultVec[0]->equalTo(goal)) {
-      goals.push_back(goal);
-      assumptionsVec.push_back(assumptions);
-      return false;
-    }
-    else {
-      for(unsigned i = 0; i < resultVec.size(); i++) {
-        goals.push_back(resultVec[i]);
-        assumptionsVec.push_back(assumptions);
-      };
-      return true;
-    };
-
-  case 4: // conjE1
-    result = applyConjE1(goal, A);
-    if(result->equalTo(goal)) {
-      goals.push_back(goal);
-      return false;
-    }
-    else {
-      goals.push_back(result);
-      return true;
-    };
-
-  case 5: // conjE2
-    result = applyConjE2(goal, A);
-    if(result->equalTo(goal)) {
-      goals.push_back(goal);
-      return false;
-    }
-    else {
-      goals.push_back(result);
-      return true;
-    };
-
-  case 6: // disjI1
-    result = applyDisjI1(goal);
-    if(result->equalTo(goal)) {
-      goals.push_back(goal);
-      return false;
-    }
-    else {
-      goals.push_back(result);
-      return true;
-    };
-
-  case 7: // disjI2
-    result = applyDisjI2(goal);
-    if(result->equalTo(goal)) {
-      goals.push_back(goal);
-      return false;
-    }
-    else {
-      goals.push_back(result);
-      return true;
-    };
-
-  case 8: // disjE
-    assumptions = assumptionsVec[assumptionsVec.size() - 1];
-    assumptionsVec.pop_back();
-    resultVec = applyDisjE(goal, A, B);
-    goals.push_back(resultVec[0]);
-    assumptionsVec.push_back(assumptions);
-    goals.push_back(resultVec[1]);
-    assumptions.push_back(A);
-    assumptionsVec.push_back(assumptions);
-    goals.push_back(resultVec[1]);
-    assumptions.pop_back();
-    assumptions.push_back(B);
-    assumptionsVec.push_back(assumptions);
-    return true;
-
-  case 9: // impI
-    assumptions = assumptionsVec[assumptionsVec.size() - 1];
-    result = applyImpI(assumptions, goal);
-    if(result->equalTo(goal)) {
-      goals.push_back(goal);
-      return false;
-    }
-    else {
-      goals.push_back(result);
-      return true;
-    };
-
-  case 10: // impE
-    assumptions = assumptionsVec[assumptionsVec.size() - 1];
-    assumptionsVec.pop_back();
-    resultVec = applyImpE(A, goal);
-    for(unsigned i = 0; i < resultVec.size(); i++) {
-      goals.push_back(resultVec[i]);
-      assumptionsVec.push_back(assumptions);
-    };
-    return true;
-
-  case 11: // falseE
-    result = applyFalseE(goal);
-    if(result->equalTo(goal)) {
-      goals.push_back(goal);
-      return false;
-    }
-    else {
-      goals.push_back(result);
-      return true;
-    };
-
-  case 12: // trueI
-    assumptionsVec.pop_back();
-    return applyTrueI(goal);
-
-  case 13: // ExcludedMiddle
-    returnValue = applyExcludedMiddle(goal);
-    if(returnValue)
-      assumptionsVec.pop_back();
-    else
-      goals.push_back(goal);
-    return returnValue;
-
-  case 14: // DoubleNegation
-    result = applyDoubleNegation(goal);
-    goals.push_back(result);
-    return !result->equalTo(goal);
-
-  case 15: // Contradiction
-    assumptions = assumptionsVec[assumptionsVec.size() - 1];
-    result = applyContradiction(assumptions, goal);
-    goals.push_back(result);
-    return !result->equalTo(goal);
-
-  default:
-    cout << "Please select a number between 0 and 15 to apply a rule" << endl;
-    return false;
-  }
-}
-
 int main () {
   // yydebug = 1;
+  Goals goals;
+  bool exit = false;
+  int ruleNumber;
+
   string rules = "Select rule to apply (-1 to exit):\n";
   rules += "0. assumption\n";
   rules += "1. notI\n";
@@ -275,98 +100,106 @@ int main () {
   rules += "14. DoubleNegation\n";
   rules += "15. Contradiction\n";
 
-  cout << "Enter formula:" << endl << endl;
+  string invalidRuleNumber = "Please select a valid rule number (between 0 and 15), or -1 to exit";
+
+  cout << "Enter formula:" << endl;
   Formula f = parseFormula();
 
-  vector<vector<Formula>> assumptionsVec = vector<vector<Formula>>();
-  assumptionsVec.push_back(vector<Formula>());
-  vector<Formula> goals = vector<Formula>();
-  goals.push_back(f);
+  goals.push_back(make_pair(vector<Formula>(), f));
 
-  bool cont = true;
-  int i;
-
-  while(goals.size() > 0 && cont) {
-    cout << endl << "Goals:" << endl;
-    for(int j = goals.size() - 1; j >= 0; j--) {
-      cout << goals.size() - j << ". ";
-      for(unsigned k = 0; k < assumptionsVec[j].size(); k++) {
-        cout << assumptionsVec[j][k];
-        if(k < assumptionsVec[j].size() - 1)
-          cout << " , ";
-      };
-      cout << " |-- ";
-      cout << goals[j] << endl;
-    };
-    cout << endl << rules << endl;
-    cin >> i;
+  while(goals.size() > 0 && !exit) {
+    cout << goals << endl;
+    cout << rules << endl;
+    cin >> ruleNumber;
     if(cin.fail()) {
+      cout << invalidRuleNumber << endl;
       clearInputBuffer();
     }
     else {
-      while(i < -1 || i > 15) {
-        cout << endl;
-        cout << "Warning: invalid rule number" << endl;
-        cout << "Please select a valid rule number (between 0 and 15), or -1 to exit" << endl;
-        cout << endl;
+      while(ruleNumber < -1 || ruleNumber > 15) {
+        cout << invalidRuleNumber << endl;
+        cout << goals << endl;
         cout << rules << endl;
-        cin >> i;
-        if(cin.fail())
+        cin >> ruleNumber;
+        if(cin.fail()) {
+          cout << invalidRuleNumber << endl;
           clearInputBuffer();
+        };
       };
-      if(i == -1)
-        cont = false;
-      // else if(i == 16) {
-      //   cout << "Unesite broj formule koju zelite da dokazujete:" << endl;
-      //   cin >> i;
-      //   while (i<1 || i>goals.size()) {
-      //     cout << "Uneli ste pogresan broj za formulu, pokusajte ponovo!" << endl;
-      //     cout << "Unesite broj formule koju zelite da dokazujete : " << endl;
-      //     cin >> i;
-      //   }
-      //   int k = goals.size();
-      //   Formula pomRight = goals[k - i];
-      //   vector <Formula> leftSidePom = assumptionsVec[k - i];
-      //   goals.push_back(pomRight);
-      //   assumptionsVec.push_back(leftSidePom);
-      //   goals.erase(goals.begin() + (k - i));
-      //   assumptionsVec.erase(assumptionsVec.begin() + (k - i));
-      // }
-      else if(i == 2 || i == 10 || i == 4 || i == 5) {
-        // clearing input buffer
-        clearInputBuffer();
 
-        cout << endl << "Enter additional formula:" << endl;
-        Formula g = parseFormula();
-        bool result = applyRule(assumptionsVec, goals, i, g);
-        if(!result)
-          cout << "Rule not applied" << endl;
-      }
-      else if(i == 8) {
-        // clearing input buffer
-        clearInputBuffer();
+      vector<Goal> subgoals;
 
-        cout << endl << "Enter additional formula A:" << endl;
-        Formula a = parseFormula();
-
-        cout << endl << "Enter additional formula B:" << endl;
-        Formula b = parseFormula();
-        bool result = applyRule(assumptionsVec, goals, i, a, b);
-        if(!result)
-          cout << "Rule not applied" << endl;
-      }
-      else {
-        Formula g = Formula(new True());
-        bool result = applyRule(assumptionsVec, goals, i, g);
-        if(!result)
-          cout << "Rule not applied" << endl;
+      switch(ruleNumber) {
+        case -1:
+          exit = true;
+          break;
+        case 0:
+          if(applyAssumption(goals[0]))
+            goals.pop_front();
+          break;
+        case 1:
+          applyNotI(goals[0]);
+          break;
+        case 2:
+          applyNotE(goals[0]);
+          break;
+        case 3:
+          subgoals.clear();
+          applyConjI(goals[0], subgoals);
+          goals.pop_front();
+          for(int j = subgoals.size() - 1; j >= 0; j--)
+            goals.push_front(subgoals[j]);
+          break;
+        case 4:
+          applyConjE1(goals[0]);
+          break;
+        case 5:
+          applyConjE2(goals[0]);
+          break;
+        case 6:
+          applyDisjI1(goals[0]);
+          break;
+        case 7:
+          applyDisjI2(goals[0]);
+          break;
+        case 8:
+          subgoals.clear();
+          applyDisjE(goals[0], subgoals);
+          goals.pop_front();
+          for(int j = subgoals.size() - 1; j >= 0; j--)
+            goals.push_front(subgoals[j]);
+          break;
+        case 9:
+          applyImpI(goals[0]);
+          break;
+        case 10:
+          applyImpE(goals[0]);
+          break;
+        case 11:
+          applyFalseE(goals[0]);
+          break;
+        case 12:
+          if(applyTrueI(goals[0]))
+            goals.pop_front();
+          break;
+        case 13:
+          if(applyExcludedMiddle(goals[0]))
+            goals.pop_front();
+          break;
+        case 14:
+          applyDoubleNegation(goals[0]);
+          break;
+        case 15:
+          applyContradiction(goals[0]);
+          break;
       };
     };
   };
-  if(cont == false)
+
+  if(exit)
     cout << "Exiting..." << endl;
   else
-    cout << "Formula " << f << " is a theorem" << endl;
+    cout << "Theorem proved: " << f << endl;
 
   return 0;
 }

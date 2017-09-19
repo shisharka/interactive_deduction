@@ -1,6 +1,7 @@
 #ifndef __NATURALDEDUCTION_HPP__
 #define __NATURALDEDUCTION_HPP__ 1
 
+#include <deque>
 #include <vector>
 #include "formula.hpp"
 
@@ -23,36 +24,37 @@
 15.    G |- ~A                             ------>    G |- A         (Contradiction)
 */
 
-bool applyAssumption(vector<Formula> & assumptions, const Formula & f);
+// Data type for representing goals
+typedef pair<vector<Formula>, Formula> Goal;
+typedef deque<Goal> Goals;
 
-Formula applyNotI(vector<Formula> & assumptions, const Formula & f);
+// --------------------------------- Intuitionistic logic rules ---------------------------------
+bool applyAssumption(const Goal & g);
 
-vector<Formula> applyNotE(const Formula & a, const Formula & f);
+// Introduction rules
+void applyNotI(Goal & g);
+void applyConjI(const Goal & g, vector<Goal> & subgoals);
+void applyDisjI1(Goal & g);
+void applyDisjI2(Goal & g);
+void applyImpI(Goal & g);
+bool applyTrueI(const Goal & g);
 
-vector<Formula> applyConjI(const Formula & f);
+// Elimination rules
+void applyNotE(Goal & g);
+void applyConjE1(Goal & g);
+void applyConjE2(Goal & g);
+void applyDisjE(const Goal & g, vector<Goal> & subgoals);
+void applyImpE(Goal & g);
+void applyFalseE(Goal & g);
+// ----------------------------------------------------------------------------------------------
 
-Formula applyConjE1(const Formula & a, const Formula & b);
+// ------------------------------------ Classical logic rules -----------------------------------
+bool applyExcludedMiddle(const Goal & g);
+void applyDoubleNegation(Goal & g);
+void applyContradiction(Goal & g);
+// ----------------------------------------------------------------------------------------------
 
-Formula applyConjE2(const Formula & a, const Formula & b);
-
-Formula applyDisjI1(const Formula & f);
-
-Formula applyDisjI2(const Formula & f);
-
-vector<Formula> applyDisjE(const Formula & c, const Formula & a, const Formula & b);
-
-Formula applyImpI(vector<Formula> & assumptions, const Formula & f);
-
-vector<Formula> applyImpE(const Formula & a, const Formula & b);
-
-Formula applyFalseE(const Formula & f);
-
-bool applyTrueI(Formula & f);
-
-bool applyExcludedMiddle(Formula & f);
-
-Formula applyDoubleNegation(const Formula & f);
-
-Formula applyContradiction(vector<Formula> & assumptions, const Formula & f);
+// Function for printing goals
+ostream & operator << (ostream & ostr, const Goals & goals);
 
 #endif

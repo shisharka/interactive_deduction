@@ -19,162 +19,224 @@
 15.    G |- ~A                             ------>    G |- A         (Contradiction)
 */
 
-bool applyAssumption(vector<Formula> & assumptions, const Formula & f) {
-  for(Formula a : assumptions)
-    if(f->equalTo(a))
+// Helper function
+void addAssumption(vector<Formula> & assumptions, const Formula & f) {
+  bool shouldAdd = true; // indicator for whether or not f should be added to assumptions
+  for(unsigned i = 0; i < assumptions.size(); i++)
+    if(f->equalTo(assumptions[i]))
+      shouldAdd = false;
+  if(shouldAdd)
+    assumptions.push_back(f);
+}
+
+bool applyAssumption(const Goal & g) {
+  for(Formula a : g.first)
+    if(g.second->equalTo(a))
       return true;
 
   cerr << "Failed to apply assumption" << endl;
-  return false;
+  return false; 
 }
 
-Formula applyNotI(vector<Formula> & assumptions, const Formula & f) {
-  if(f->getType() == T_NOT) {
-    Formula notOp = ((Not *)f.get())->getOperand();
+void applyNotI(Goal & g) {
+  if(g.second->getType() == T_NOT) {
+    Formula notOp = ((Not *)g.second.get())->getOperand();
 
-    bool shouldAdd = true; // indicator for whether or not notOp should be added to assumptions
-    for(unsigned i = 0; i < assumptions.size(); i++)
-      if(notOp->equalTo(assumptions[i]))
-        shouldAdd = false;
-    if(shouldAdd)
-      assumptions.push_back(notOp);
+    addAssumption(g.first, notOp);
 
-    return make_shared<False>();
-  };
-
-  cerr << "Failed to apply notI" << endl;
-  return f;
+    g.second = make_shared<False>();
+  }
+  else
+    cerr << "Failed to apply notI" << endl;
 }
 
-vector<Formula> applyNotE(const Formula & a, const Formula & f) {
-  vector<Formula> result = vector<Formula>();
+void applyConjI(const Goal & g, vector<Goal> & subgoals) {
+  if(g.second->getType() == T_AND) {
+    Goal goal1, goal2;
 
-  if(f->getType() == T_FALSE) {
-    result.push_back(a);
-    // if(a->getType() == T_NOT)
-    //   result.push_back(((Not *)a.get())->getOperand());
-    // else
-      result.push_back(make_shared<Not>(a));
+    goal1.first = g.first;
+    goal1.second = ((And *)g.second.get())->getOperand1();
 
-    return result;
+    goal2.first = g.first;
+    goal2.second = ((And *)g.second.get())->getOperand2();
+
+    subgoals.push_back(goal1);
+    subgoals.push_back(goal2);
+  }
+  else
+    cerr << "Failed to apply conjI" << endl;
+}
+
+void applyDisjI1(Goal & g) {
+  if(g.second->getType() == T_OR)
+    g.second = (((Or *)g.second.get())->getOperand1());
+  else
+    cerr << "Failed to apply disjI1" << endl;
+}
+
+void applyDisjI2(Goal & g) {
+  if(g.second->getType() == T_OR)
+    g.second = (((Or *)g.second.get())->getOperand2());
+  else
+    cerr << "Failed to apply disjI1" << endl;
+}
+
+void applyImpI(Goal & g) {
+  if(g.second->getType() == T_IMP) {
+    Formula a = (((Imp *)g.second.get())->getOperand1());
+    Formula b = (((Imp *)g.second.get())->getOperand2());
+
+    addAssumption(g.first, a);
+
+    g.second = b;
+  }
+  else
+    cerr << "Failed to apply impI" << endl;
+}
+
+bool applyTrueI(const Goal & g) {
+  if(g.second->getType() == T_TRUE)
+    return true;
+  else {
+    cerr << "Failed to apply trueI" << endl;
+    return false;
+  }
+}
+
+void applyNotE(Goal & g) {
+  for(vector<Formula>::iterator i = g.first.begin(); i != g.first.end();) {
+    if((*i)->getType() == T_NOT) {
+      Formula f = ((Not *)(*i).get())->getOperand();
+      g.first.erase(i);
+      g.second = f;
+      return;
+    };
   };
 
   cerr << "Failed to apply notE" << endl;
-  result.push_back(f);
-  return result;
 }
 
-vector<Formula> applyConjI(const Formula & f) {
-  vector<Formula> result = vector<Formula>();
-
-  if(f->getType() == T_AND) {
-    result.push_back(((And *)f.get())->getOperand1());
-    result.push_back(((And *)f.get())->getOperand2());
-
-    return result;
+void applyConjE1(Goal & g) {
+  for(vector<Formula>::iterator i = g.first.begin(); i != g.first.end(); i++) {
+    if((*i)->getType() == T_AND) {
+      Formula f = ((And *)(*i).get())->getOperand1();
+      g.first.erase(i);
+      g.first.push_back(f);
+      return;
+    };
   };
 
-  cerr << "Failed to apply conjI" << endl;
-  result.push_back(f);
-  return result;
+  cerr << "Failed to apply conjE1" << endl;
 }
 
-Formula applyConjE1(const Formula & a, const Formula & b) {
-  return make_shared<And>(a, b);
-}
-
-Formula applyConjE2(const Formula & a, const Formula & b) {
-  return make_shared<And>(b, a);
-}
-
-Formula applyDisjI1(const Formula & f) {
-  if(f->getType() == T_OR)
-    return (((Or *)f.get())->getOperand1());
-
-  cerr << "Failed to apply disjI1" << endl;
-  return f;
-}
-
-Formula applyDisjI2(const Formula & f) {
-  if(f->getType() == T_OR)
-    return (((Or *)f.get())->getOperand2());
-
-  cerr << "Failed to apply disjI2" << endl;
-  return f;
-}
-
-vector<Formula> applyDisjE(const Formula & c, const Formula & a, const Formula & b) {
-  vector<Formula> result = vector<Formula>();
-  result.push_back(Formula(new Or(a, b)));
-  result.push_back(c);
-
-  return result;
-}
-
-Formula applyImpI(vector<Formula> & assumptions, const Formula & f) {
-  if(f->getType() == T_IMP) {
-    Formula a = (((Imp *)f.get())->getOperand1());
-    Formula b = (((Imp *)f.get())->getOperand2());
-
-    bool shouldAdd = true; // indicator for whether or not a should be added to assumptions
-    for(unsigned i = 0; i < assumptions.size(); i++)
-      if(a->equalTo(assumptions[i]))
-        shouldAdd = false;
-    if(shouldAdd)
-      assumptions.push_back(a);
-
-    return b;
+void applyConjE2(Goal & g) {
+  for(vector<Formula>::iterator i = g.first.begin(); i != g.first.end(); i++) {
+    if((*i)->getType() == T_AND) {
+      Formula f = ((And *)(*i).get())->getOperand2();
+      g.first.erase(i);
+      g.first.push_back(f);
+      return;
+    };
   };
 
-  cerr << "Failed to apply impI" << endl;
-  return f;
+  cerr << "Failed to apply conjE2" << endl;
 }
 
-vector<Formula> applyImpE(const Formula & a, const Formula & b) {
-  vector<Formula> result = vector<Formula>();
+void applyDisjE(const Goal & g, vector<Goal> & subgoals) {
+  Formula a, b;
+  vector<Formula> ass1, ass2;
+  bool applied = false;
 
-  result.push_back(a);
-  result.push_back(make_shared<Imp>(a, b));
-  return result;
-}
-
-Formula applyFalseE(const Formula & f) {
-  return make_shared<False>();
-}
-
-bool applyTrueI(Formula & f) {
-  return f->getType() == T_TRUE;
-}
-
-bool applyExcludedMiddle(Formula & f) {
-  if(f->getType() == T_OR) {
-    Formula a = (((Or *)f.get())->getOperand1());
-    Formula b = (((Or *)f.get())->getOperand2());
-
-    if(a->getType() == T_NOT)
-      return b->equalTo((((Not *)a.get())->getOperand()));
-
-    if(b->getType() == T_NOT)
-      return a->equalTo((((Not *)b.get())->getOperand()));
+  for(vector<Formula>::const_iterator i = g.first.begin(); i != g.first.end(); i++) {
+    if((*i)->getType() == T_OR) {
+      a = ((Or *)(*i).get())->getOperand1();
+      b = ((Or *)(*i).get())->getOperand2();
+      applied = true;
+    }
+    else {
+      ass1.push_back(*i);
+      ass2.push_back(*i);
+    };
   };
 
-  return false;
+  if(applied) {
+    ass1.push_back(a);
+    ass2.push_back(b);
+    subgoals.push_back(make_pair(ass1, g.second));
+    subgoals.push_back(make_pair(ass2, g.second));
+  }
+  else
+    cerr << "Failed to apply disjE" << endl;
 }
 
-Formula applyDoubleNegation(const Formula & f) {
-  return make_shared<Not>(make_shared<Not>(f));
+void applyImpE(Goal & g) {
+  for(vector<Formula>::iterator i = g.first.begin(); i != g.first.end(); i++) {
+    if((*i)->getType() == T_IMP) {
+      Formula a = ((Imp *)(*i).get())->getOperand1();
+      Formula b = ((Imp *)(*i).get())->getOperand2();
+      
+      for(vector<Formula>::iterator j = g.first.begin(); j != g.first.end(); j++) {
+        if((*j)->equalTo(a)) {
+          g.first.erase(i);
+          g.first.erase(j);
+          g.first.push_back(b);
+          return;
+        };
+      };
+    };
+  };
+
+  cerr << "Failed to apply impE" << endl;
 }
 
-Formula applyContradiction(vector<Formula> & assumptions, const Formula & f) {
-  Formula fNot = make_shared<Not>(f);
+void applyFalseE(Goal & g) {
+  for(vector<Formula>::iterator i = g.first.begin(); i != g.first.end(); i++) {
+    if((*i)->getType() == T_FALSE) {
+      g.first.erase(i);
+      g.first.push_back(g.second);
+      return;
+    };
+  };
+
+  cerr << "Failed to apply falseE" << endl;
+}
+
+bool applyExcludedMiddle(const Goal & g) {
+  if(g.second->getType() == T_OR) {
+    Formula a = ((Or *)g.second.get())->getOperand1();
+    Formula b = ((Or *)g.second.get())->getOperand1();
+    if(a->getType() == T_NOT && ((Not *)a.get())->getOperand()->equalTo(b))
+      return true;
+    if(b->getType() == T_NOT && ((Not *)b.get())->getOperand()->equalTo(a))
+      return true;
+  };
+
+  cerr << "Failed to apply assumption" << endl;
+  return false; 
+}
+
+void applyDoubleNegation(Goal & g) {
+  g.second = make_shared<Not>(make_shared<Not>(g.second));
+}
+
+void applyContradiction(Goal & g) {
+  g.first.push_back(make_shared<Not>(g.second));
+  g.second = make_shared<False>();
+}
+
+// Function for printing goals
+ostream & operator << (ostream & ostr, const Goals & goals) {
+  ostr << endl << "Goals:" << endl;
+  for(unsigned i = 0; i < goals.size(); i++) {
+    ostr << i + 1 << ". ";
+    for(unsigned j = 0; j < goals[i].first.size(); j++) {
+      ostr << goals[i].first[j];
+      if(j < goals[i].first.size() - 1)
+        ostr << " , ";
+    };
+    ostr << " |-- ";
+    ostr << goals[i].second << endl;
+  };
   
-  bool shouldAdd = true; // indicator for whether or not fNot should be added to assumptions
-  for(unsigned i = 0; i < assumptions.size(); i++)
-    if(fNot->equalTo(assumptions[i]))
-      shouldAdd = false;
-  if(shouldAdd)
-    assumptions.push_back(fNot);
-
-  return make_shared<False>();
-
+  return ostr;
 }
