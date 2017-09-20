@@ -44,7 +44,7 @@ void applyNotE(Goal & g);
 void applyConjE1(Goal & g);
 void applyConjE2(Goal & g);
 void applyDisjE(const Goal & g, vector<Goal> & subgoals);
-void applyImpE(Goal & g);
+void applyImpE(const Goal & g, vector<Goal> & subgoals);
 void applyFalseE(Goal & g);
 // ----------------------------------------------------------------------------------------------
 

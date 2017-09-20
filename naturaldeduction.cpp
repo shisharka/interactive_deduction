@@ -160,8 +160,8 @@ void applyDisjE(const Goal & g, vector<Goal> & subgoals) {
   };
 
   if(applied) {
-    ass1.push_back(a);
-    ass2.push_back(b);
+    addAssumption(ass1, a);
+    addAssumption(ass2, b);
     subgoals.push_back(make_pair(ass1, g.second));
     subgoals.push_back(make_pair(ass2, g.second));
   }
@@ -169,23 +169,30 @@ void applyDisjE(const Goal & g, vector<Goal> & subgoals) {
     cerr << "Failed to apply disjE" << endl;
 }
 
-void applyImpE(Goal & g) {
-  for(vector<Formula>::iterator i = g.first.begin(); i != g.first.end(); i++) {
+void applyImpE(const Goal & g, vector<Goal> & subgoals) {
+  Formula a, b;
+  vector<Formula> ass1, ass2;
+  bool applied = false;
+
+  for(vector<Formula>::const_iterator i = g.first.begin(); i != g.first.end(); i++) {
     if((*i)->getType() == T_IMP) {
-      Formula a = ((Imp *)(*i).get())->getOperand1();
-      Formula b = ((Imp *)(*i).get())->getOperand2();
-      
-      for(vector<Formula>::iterator j = g.first.begin(); j != g.first.end(); j++) {
-        if((*j)->equalTo(a)) {
-          g.first.erase(i);
-          addAssumption(g.first, b);
-          return;
-        };
-      };
+      a = ((Imp *)(*i).get())->getOperand1();
+      b = ((Imp *)(*i).get())->getOperand2();
+      applied = true;
+    }
+    else {
+      addAssumption(ass1, *i);
+      addAssumption(ass2, *i);
     };
   };
 
-  cerr << "Failed to apply impE" << endl;
+  if(applied) {
+    addAssumption(ass2, b);
+    subgoals.push_back(make_pair(ass1, a));
+    subgoals.push_back(make_pair(ass2, g.second));
+  }
+  else
+    cerr << "Failed to apply impE" << endl;
 }
 
 void applyFalseE(Goal & g) {
@@ -210,7 +217,7 @@ bool applyExcludedMiddle(const Goal & g) {
       return true;
   };
 
-  cerr << "Failed to apply assumption" << endl;
+  cerr << "Failed to apply excluded middle" << endl;
   return false; 
 }
 

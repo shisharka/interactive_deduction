@@ -34,8 +34,10 @@ extern int yylex();
 %type <f> E
 
 // Operators precedence and associativity
-%left imp_token iff_token
-%left or_token and_token
+%left iff_token
+%right imp_token
+%left or_token 
+%left and_token
 %left NOT
 
 %parse-param { Formula & formula }
@@ -74,6 +76,15 @@ Formula parseFormula() {
 void clearInputBuffer() {
   cin.clear();
   cin.ignore();
+}
+
+// Function for switching goal with subgoals
+void switchGoals(Goals & goals, const vector<Goal> & subgoals) {
+  if(subgoals.size() > 0) {
+    goals.pop_front();
+    for(int j = subgoals.size() - 1; j >= 0; j--)
+      goals.push_front(subgoals[j]);
+  };
 }
 
 int main () {
@@ -146,9 +157,7 @@ int main () {
         case 3:
           subgoals.clear();
           applyConjI(goals[0], subgoals);
-          goals.pop_front();
-          for(int j = subgoals.size() - 1; j >= 0; j--)
-            goals.push_front(subgoals[j]);
+          switchGoals(goals, subgoals);
           break;
         case 4:
           applyConjE1(goals[0]);
@@ -165,15 +174,15 @@ int main () {
         case 8:
           subgoals.clear();
           applyDisjE(goals[0], subgoals);
-          goals.pop_front();
-          for(int j = subgoals.size() - 1; j >= 0; j--)
-            goals.push_front(subgoals[j]);
+          switchGoals(goals, subgoals);
           break;
         case 9:
           applyImpI(goals[0]);
           break;
         case 10:
-          applyImpE(goals[0]);
+          subgoals.clear();
+          applyImpE(goals[0], subgoals);
+          switchGoals(goals, subgoals);
           break;
         case 11:
           applyFalseE(goals[0]);
