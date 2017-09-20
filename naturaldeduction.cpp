@@ -104,7 +104,7 @@ bool applyTrueI(const Goal & g) {
 }
 
 void applyNotE(Goal & g) {
-  for(vector<Formula>::iterator i = g.first.begin(); i != g.first.end();) {
+  for(vector<Formula>::iterator i = g.first.begin(); i != g.first.end(); i++) {
     if((*i)->getType() == T_NOT) {
       Formula f = ((Not *)(*i).get())->getOperand();
       g.first.erase(i);
@@ -178,7 +178,6 @@ void applyImpE(Goal & g) {
       for(vector<Formula>::iterator j = g.first.begin(); j != g.first.end(); j++) {
         if((*j)->equalTo(a)) {
           g.first.erase(i);
-          g.first.erase(j);
           g.first.push_back(b);
           return;
         };
