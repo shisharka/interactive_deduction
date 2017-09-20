@@ -149,7 +149,7 @@ void applyDisjE(const Goal & g, vector<Goal> & subgoals) {
   bool applied = false;
 
   for(vector<Formula>::const_iterator i = g.first.begin(); i != g.first.end(); i++) {
-    if((*i)->getType() == T_OR) {
+    if((*i)->getType() == T_OR && !applied) {
       a = ((Or *)(*i).get())->getOperand1();
       b = ((Or *)(*i).get())->getOperand2();
       applied = true;
@@ -176,7 +176,7 @@ void applyImpE(const Goal & g, vector<Goal> & subgoals) {
   bool applied = false;
 
   for(vector<Formula>::const_iterator i = g.first.begin(); i != g.first.end(); i++) {
-    if((*i)->getType() == T_IMP) {
+    if((*i)->getType() == T_IMP && !applied) {
       a = ((Imp *)(*i).get())->getOperand1();
       b = ((Imp *)(*i).get())->getOperand2();
       applied = true;
