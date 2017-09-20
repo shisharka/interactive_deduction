@@ -7,7 +7,7 @@ In each step user has a list of goals. Goal has a set of assumptions on the left
 Selected rule is applied to the first goal from the list.<br />
 Theorem is proved when the list of goals gets empty.
 
-###Deduction rules:
+### Deduction rules:
 ```
 // Intuitionistic deduction:
 0.                                         ------> G, A |- A         (assumption)
