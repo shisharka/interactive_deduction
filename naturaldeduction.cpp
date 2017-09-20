@@ -121,7 +121,7 @@ void applyConjE1(Goal & g) {
     if((*i)->getType() == T_AND) {
       Formula f = ((And *)(*i).get())->getOperand1();
       g.first.erase(i);
-      g.first.push_back(f);
+      addAssumption(g.first, f);
       return;
     };
   };
@@ -134,7 +134,7 @@ void applyConjE2(Goal & g) {
     if((*i)->getType() == T_AND) {
       Formula f = ((And *)(*i).get())->getOperand2();
       g.first.erase(i);
-      g.first.push_back(f);
+      addAssumption(g.first, f);
       return;
     };
   };
@@ -178,7 +178,7 @@ void applyImpE(Goal & g) {
       for(vector<Formula>::iterator j = g.first.begin(); j != g.first.end(); j++) {
         if((*j)->equalTo(a)) {
           g.first.erase(i);
-          g.first.push_back(b);
+          addAssumption(g.first, b);
           return;
         };
       };
@@ -192,7 +192,7 @@ void applyFalseE(Goal & g) {
   for(vector<Formula>::iterator i = g.first.begin(); i != g.first.end(); i++) {
     if((*i)->getType() == T_FALSE) {
       g.first.erase(i);
-      g.first.push_back(g.second);
+      addAssumption(g.first, g.second);
       return;
     };
   };
@@ -219,7 +219,7 @@ void applyDoubleNegation(Goal & g) {
 }
 
 void applyContradiction(Goal & g) {
-  g.first.push_back(make_shared<Not>(g.second));
+  addAssumption(g.first, make_shared<Not>(g.second));
   g.second = make_shared<False>();
 }
 
