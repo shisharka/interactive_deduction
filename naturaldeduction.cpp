@@ -15,8 +15,9 @@
 11.    G |- F                              ------>    G |- A         (FalseE)
 12.                                        ------>    G |- T         (TrueI)
 13.                                        ------>    G |- A \/ ~A   (ExcludedMiddle)
-14.    G |- ~~A                            ------>    G |- A         (DoubleNegation)
-15.    G |- ~A                             ------>    G |- A         (Contradiction)
+14.    G |- A                              ------>    G |- ~~A       (DoubleNegationI)
+15.    G |- ~~A                            ------>    G |- A         (DoubleNegationE)
+16.    G |- ~A                             ------>    G |- A         (Contradiction)
 */
 
 // Helper function
@@ -217,12 +218,26 @@ bool applyExcludedMiddle(const Goal & g) {
       return true;
   };
 
-  cerr << "Failed to apply excluded middle" << endl;
+  cerr << "Failed to apply ExcludedMiddle" << endl;
   return false; 
 }
 
-void applyDoubleNegation(Goal & g) {
-  g.second = make_shared<Not>(make_shared<Not>(g.second));
+void applyDoubleNegationI(Goal & g) {
+  if(g.second->getType() == T_NOT && ((Not *)(g.second.get()))->getOperand()->getType() == T_NOT)
+    g.second = ((Not*)((Not *)(g.second.get()))->getOperand().get())->getOperand();
+  else
+    cerr << "Failed to apply DoubleNegationI" << endl;
+}
+
+void applyDoubleNegationE(Goal & g) {
+  for(vector<Formula>::iterator i = g.first.begin(); i != g.first.end(); i++) {
+    if((*i)->getType() == T_NOT && ((Not *)((*i).get()))->getOperand()->getType() == T_NOT) {
+      (*i) = ((Not*)((Not *)((*i).get()))->getOperand().get())->getOperand();
+      return;
+    };
+  };
+
+  cerr << "Failed to apply DoubleNegationE" << endl;
 }
 
 void applyContradiction(Goal & g) {

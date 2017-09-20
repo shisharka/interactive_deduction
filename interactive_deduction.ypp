@@ -108,10 +108,11 @@ int main () {
   rules += "11. falseE\n";
   rules += "12. trueI\n";
   rules += "13. ExcludedMiddle\n";
-  rules += "14. DoubleNegation\n";
-  rules += "15. Contradiction\n";
+  rules += "14. DoubleNegationI\n";
+  rules += "15. DoubleNegationE\n";
+  rules += "16. Contradiction\n";
 
-  string invalidRuleNumber = "Please select a valid rule number (between 0 and 15), or -1 to exit";
+  string invalidRuleNumber = "Please select a valid rule number (between 0 and 16), or -1 to exit";
 
   cout << "Enter formula:" << endl;
   Formula f = parseFormula();
@@ -127,7 +128,7 @@ int main () {
       clearInputBuffer();
     }
     else {
-      while(ruleNumber < -1 || ruleNumber > 15) {
+      while(ruleNumber < -1 || ruleNumber > 16) {
         cout << invalidRuleNumber << endl;
         cout << goals << endl;
         cout << rules << endl;
@@ -196,9 +197,12 @@ int main () {
             goals.pop_front();
           break;
         case 14:
-          applyDoubleNegation(goals[0]);
+          applyDoubleNegationI(goals[0]);
           break;
         case 15:
+          applyDoubleNegationE(goals[0]);
+          break;
+        case 16:
           applyContradiction(goals[0]);
           break;
       };
