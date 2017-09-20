@@ -1,7 +1,7 @@
 #include "naturaldeduction.hpp"
 
 /* Natural deduction rules:
-0.                                         ------> G, A |- A         (ass)
+0.                                         ------> G, A |- A         (assumption)
 1.  G, A |- F                              ------>    G |- ~A        (notI)
 2.     G |- A; G |- ~A                     ------>    G |- F         (notE)
 3.     G |- A; G |- B                      ------>    G |- A /\ B    (conjI)
