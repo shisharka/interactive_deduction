@@ -34,11 +34,11 @@ extern int yylex();
 %type <f> E
 
 // Operators precedence and associativity
-%left iff_token
+%right iff_token
 %right imp_token
 %left or_token 
 %left and_token
-%left NOT
+%right NOT
 
 %parse-param { Formula & formula }
 
@@ -94,25 +94,26 @@ int main () {
   int ruleNumber;
 
   string rules = "Select rule to apply (-1 to exit):\n";
-  rules += "0. assumption\n";
-  rules += "1. notI\n";
-  rules += "2. notE\n";
-  rules += "3. conjI\n";
-  rules += "4. conjE1\n";
-  rules += "5. conjE2\n";
-  rules += "6. disjI1\n";
-  rules += "7. disjI2\n";
-  rules += "8. disjE\n";
-  rules += "9. impI\n";
-  rules += "10. impE\n";
-  rules += "11. falseE\n";
-  rules += "12. trueI\n";
-  rules += "13. ExcludedMiddle\n";
-  rules += "14. DoubleNegationI\n";
-  rules += "15. DoubleNegationE\n";
-  rules += "16. Contradiction\n";
+  rules += "0. Assumption\n";
+  rules += "1. NotI\n";
+  rules += "2. NotE\n";
+  rules += "3. ConjI\n";
+  rules += "4. ConjE1\n";
+  rules += "5. ConjE2\n";
+  rules += "6. ConjE\n";
+  rules += "7. DisjI1\n";
+  rules += "8. DisjI2\n";
+  rules += "9. DisjE\n";
+  rules += "10. ImpI\n";
+  rules += "11. ImpE\n";
+  rules += "12. FalseE\n";
+  rules += "13. TrueI\n";
+  rules += "14. ExcludedMiddle\n";
+  rules += "15. DoubleNegationI\n";
+  rules += "16. DoubleNegationE\n";
+  rules += "17. Contradiction\n";
 
-  string invalidRuleNumber = "Please select a valid rule number (between 0 and 16), or -1 to exit";
+  string invalidRuleNumber = "Please select a valid rule number (between 0 and 17), or -1 to exit";
 
   cout << "Enter formula:" << endl;
   Formula f = parseFormula();
@@ -128,7 +129,7 @@ int main () {
       clearInputBuffer();
     }
     else {
-      while(ruleNumber < -1 || ruleNumber > 16) {
+      while(ruleNumber < -1 || ruleNumber > 17) {
         cout << invalidRuleNumber << endl;
         cout << goals << endl;
         cout << rules << endl;
@@ -146,63 +147,84 @@ int main () {
           exit = true;
           break;
         case 0:
+          cout << "Applying rule: Assumption" << endl;
           if(applyAssumption(goals[0]))
             goals.pop_front();
           break;
         case 1:
+          cout << "Applying rule: NotI" << endl;
           applyNotI(goals[0]);
           break;
         case 2:
+          cout << "Applying rule: NotE" << endl;
           applyNotE(goals[0]);
           break;
         case 3:
+          cout << "Applying rule: ConjI" << endl;
           subgoals.clear();
           applyConjI(goals[0], subgoals);
           switchGoals(goals, subgoals);
           break;
         case 4:
+          cout << "Applying rule: ConjE1" << endl;
           applyConjE1(goals[0]);
           break;
         case 5:
+          cout << "Applying rule: ConjE2" << endl;
           applyConjE2(goals[0]);
           break;
         case 6:
-          applyDisjI1(goals[0]);
+          cout << "Applying rule: ConjE" << endl;
+          applyConjE(goals[0]);
           break;
         case 7:
-          applyDisjI2(goals[0]);
+          cout << "Applying rule: DisjI1" << endl;
+          applyDisjI1(goals[0]);
           break;
         case 8:
+          cout << "Applying rule: DisjI2" << endl;
+          applyDisjI2(goals[0]);
+          break;
+        case 9:
+          cout << "Applying rule: DisjE" << endl;
           subgoals.clear();
           applyDisjE(goals[0], subgoals);
           switchGoals(goals, subgoals);
           break;
-        case 9:
+        case 10:
+          cout << "Applying rule: ImpI" << endl;
           applyImpI(goals[0]);
           break;
-        case 10:
+        case 11:
+          cout << "Applying rule: ImpE" << endl;
           subgoals.clear();
           applyImpE(goals[0], subgoals);
           switchGoals(goals, subgoals);
           break;
-        case 11:
+        case 12:
+          cout << "Applying rule: FalseE" << endl;
           applyFalseE(goals[0]);
           break;
-        case 12:
+        case 13:
+          cout << "Applying rule: TrueI" << endl;
           if(applyTrueI(goals[0]))
             goals.pop_front();
           break;
-        case 13:
+        case 14:
+          cout << "Applying rule: ExcludedMiddle" << endl;
           if(applyExcludedMiddle(goals[0]))
             goals.pop_front();
           break;
-        case 14:
+        case 15:
+          cout << "Applying rule: DoubleNegationI" << endl;
           applyDoubleNegationI(goals[0]);
           break;
-        case 15:
+        case 16:
+          cout << "Applying rule: DoubleNegationE" << endl;
           applyDoubleNegationE(goals[0]);
           break;
-        case 16:
+        case 17:
+          cout << "Applying rule: Contradiction" << endl;
           applyContradiction(goals[0]);
           break;
       };

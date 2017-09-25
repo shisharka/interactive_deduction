@@ -7,17 +7,18 @@
 3.     G |- A; G |- B                      ------>    G |- A /\ B    (conjI)
 4.     G |- A /\ B                         ------>    G |- A         (conjE1)
 5.     G |- A /\ B                         ------>    G |- B         (conjE2)
-6.     G |- A                              ------>    G |- A \/ B    (disjI1)
-7.     G |- B                              ------>    G |- A \/ B    (disjI2)
-8.     G |- A \/ B; G, A |- C;  G, B |- C  ------>    G |- C         (disjE)
-9.  G, A |- B                              ------>    G |- A => B    (impI)
-10.    G |- A; G |- A => B                 ------>    G |- B         (impE)
-11.    G |- F                              ------>    G |- A         (FalseE)
-12.                                        ------>    G |- T         (TrueI)
-13.                                        ------>    G |- A \/ ~A   (ExcludedMiddle)
-14.    G |- A                              ------>    G |- ~~A       (DoubleNegationI)
-15.    G |- ~~A                            ------>    G |- A         (DoubleNegationE)
-16.    G |- ~A                             ------>    G |- A         (Contradiction)
+6.     G |- A /\ B                         ------>    G |- A, B      (conjE)
+7.     G |- A                              ------>    G |- A \/ B    (disjI1)
+8.     G |- B                              ------>    G |- A \/ B    (disjI2)
+9.     G |- A \/ B; G, A |- C;  G, B |- C  ------>    G |- C         (disjE)
+10.  G, A |- B                              ------>    G |- A => B    (impI)
+11.    G |- A; G |- A => B                 ------>    G |- B         (impE)
+12.    G |- F                              ------>    G |- A         (FalseE)
+13.                                        ------>    G |- T         (TrueI)
+14.                                        ------>    G |- A \/ ~A   (ExcludedMiddle)
+15.    G |- A                              ------>    G |- ~~A       (DoubleNegationI)
+16.    G |- ~~A                            ------>    G |- A         (DoubleNegationE)
+17.    G |- ~A                             ------>    G |- A         (Contradiction)
 */
 
 // Helper function
@@ -35,7 +36,7 @@ bool applyAssumption(const Goal & g) {
     if(g.second->equalTo(a))
       return true;
 
-  cerr << "Failed to apply assumption" << endl;
+  cerr << "Failed to apply Assumption" << endl;
   return false; 
 }
 
@@ -48,7 +49,7 @@ void applyNotI(Goal & g) {
     g.second = make_shared<False>();
   }
   else
-    cerr << "Failed to apply notI" << endl;
+    cerr << "Failed to apply NotI" << endl;
 }
 
 void applyConjI(const Goal & g, vector<Goal> & subgoals) {
@@ -65,21 +66,21 @@ void applyConjI(const Goal & g, vector<Goal> & subgoals) {
     subgoals.push_back(goal2);
   }
   else
-    cerr << "Failed to apply conjI" << endl;
+    cerr << "Failed to apply ConjI" << endl;
 }
 
 void applyDisjI1(Goal & g) {
   if(g.second->getType() == T_OR)
     g.second = (((Or *)g.second.get())->getOperand1());
   else
-    cerr << "Failed to apply disjI1" << endl;
+    cerr << "Failed to apply DisjI1" << endl;
 }
 
 void applyDisjI2(Goal & g) {
   if(g.second->getType() == T_OR)
     g.second = (((Or *)g.second.get())->getOperand2());
   else
-    cerr << "Failed to apply disjI1" << endl;
+    cerr << "Failed to apply DisjI2" << endl;
 }
 
 void applyImpI(Goal & g) {
@@ -92,14 +93,14 @@ void applyImpI(Goal & g) {
     g.second = b;
   }
   else
-    cerr << "Failed to apply impI" << endl;
+    cerr << "Failed to apply ImpI" << endl;
 }
 
 bool applyTrueI(const Goal & g) {
   if(g.second->getType() == T_TRUE)
     return true;
   else {
-    cerr << "Failed to apply trueI" << endl;
+    cerr << "Failed to apply TrueI" << endl;
     return false;
   }
 }
@@ -114,7 +115,7 @@ void applyNotE(Goal & g) {
     };
   };
 
-  cerr << "Failed to apply notE" << endl;
+  cerr << "Failed to apply NotE" << endl;
 }
 
 void applyConjE1(Goal & g) {
@@ -127,7 +128,7 @@ void applyConjE1(Goal & g) {
     };
   };
 
-  cerr << "Failed to apply conjE1" << endl;
+  cerr << "Failed to apply ConjE1" << endl;
 }
 
 void applyConjE2(Goal & g) {
@@ -140,7 +141,22 @@ void applyConjE2(Goal & g) {
     };
   };
 
-  cerr << "Failed to apply conjE2" << endl;
+  cerr << "Failed to apply ConjE2" << endl;
+}
+
+void applyConjE(Goal & g) {
+  for(vector<Formula>::iterator i = g.first.begin(); i != g.first.end(); i++) {
+    if((*i)->getType() == T_AND) {
+      Formula a = ((And *)(*i).get())->getOperand1();
+      Formula b = ((And *)(*i).get())->getOperand2();
+      g.first.erase(i);
+      addAssumption(g.first, a);
+      addAssumption(g.first, b);
+      return;
+    };
+  };
+
+  cerr << "Failed to apply ConjE" << endl;
 }
 
 void applyDisjE(const Goal & g, vector<Goal> & subgoals) {
@@ -167,7 +183,7 @@ void applyDisjE(const Goal & g, vector<Goal> & subgoals) {
     subgoals.push_back(make_pair(ass2, g.second));
   }
   else
-    cerr << "Failed to apply disjE" << endl;
+    cerr << "Failed to apply DisjE" << endl;
 }
 
 void applyImpE(const Goal & g, vector<Goal> & subgoals) {
@@ -193,7 +209,7 @@ void applyImpE(const Goal & g, vector<Goal> & subgoals) {
     subgoals.push_back(make_pair(ass2, g.second));
   }
   else
-    cerr << "Failed to apply impE" << endl;
+    cerr << "Failed to apply ImpE" << endl;
 }
 
 void applyFalseE(Goal & g) {
@@ -205,7 +221,7 @@ void applyFalseE(Goal & g) {
     };
   };
 
-  cerr << "Failed to apply falseE" << endl;
+  cerr << "Failed to apply FalseE" << endl;
 }
 
 bool applyExcludedMiddle(const Goal & g) {
