@@ -16,7 +16,7 @@ Theorem is proved when the list of goals gets empty.
 3.     G |- A; G |- B                      ------>    G |- A /\ B    (conjI)
 4.     G |- A /\ B                         ------>    G |- A         (conjE1)
 5.     G |- A /\ B                         ------>    G |- B         (conjE2)
-6.     G |- A /\ B                         ------>    G |- A, B      (conjE2)
+6.     G |- A /\ B                         ------>    G |- A, B      (conjE)
 7.     G |- A                              ------>    G |- A \/ B    (disjI1)
 8.     G |- B                              ------>    G |- A \/ B    (disjI2)
 9.     G |- A \/ B; G, A |- C;  G, B |- C  ------>    G |- C         (disjE)
