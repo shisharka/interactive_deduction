@@ -1,6 +1,6 @@
 # Interactive Theorem Proof Assistant for Natural Deduction
 
-Console application implemented in C++, using flex and bison for lexical analyzing and syntax checking of the input formula.<br /><br />
+Console application implemented in C++, using flex and bison for syntax checking and parsing of the input formula.<br /><br />
 Input should be in mathematical notation, for example: ```~(a \/ b) => ~a /\ ~b``` <br />
 After parsing of the input formula, user interactively selects which rule to apply.<br />
 In each step user has a list of goals. Goal has a set of assumptions on the left side and a single formula on the right side.
